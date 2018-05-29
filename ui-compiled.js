@@ -24,17 +24,62 @@ var Title = function Title() {
 
 // Chat Log Component
 var Chat = function Chat(props) {
-  return React.createElement("div", null);
+  return React.createElement(
+    "p",
+    null,
+    props.username,
+    " : ",
+    props.message
+  );
 };
 
 var ChatBox = function (_React$Component) {
   _inherits(ChatBox, _React$Component);
 
-  function ChatBox() {
+  function ChatBox(props) {
     _classCallCheck(this, ChatBox);
 
-    return _possibleConstructorReturn(this, (ChatBox.__proto__ || Object.getPrototypeOf(ChatBox)).apply(this, arguments));
+    var _this = _possibleConstructorReturn(this, (ChatBox.__proto__ || Object.getPrototypeOf(ChatBox)).call(this, props));
+
+    _this.state = {
+      chatLog: []
+    };
+    return _this;
   }
+
+  _createClass(ChatBox, [{
+    key: "componentDidMount",
+    value: function componentDidMount() {
+      var _this2 = this;
+
+      socket.on("receiveChat", function (data) {
+        var newStateArray = _this2.state.chatLog.slice();
+        newStateArray.push({ username: data.username, message: data.message });
+        _this2.setState({
+          chatLog: newStateArray
+        });
+        console.log(_this2.state.chatLog);
+      });
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      var chatLog = this.state.chatLog;
+
+      var chat = chatLog.map(function (item, idx) {
+        return React.createElement(Chat, {
+          username: item.username,
+          message: item.message,
+          key: idx
+        });
+      });
+      return React.createElement(
+        "div",
+        { style: { width: "100%", height: "500px", overflowY: "scroll" } },
+        chat
+      );
+    }
+  }]);
 
   return ChatBox;
 }(React.Component);
@@ -45,22 +90,24 @@ var ChatInput = function (_React$Component2) {
   function ChatInput(props) {
     _classCallCheck(this, ChatInput);
 
-    var _this2 = _possibleConstructorReturn(this, (ChatInput.__proto__ || Object.getPrototypeOf(ChatInput)).call(this, props));
+    var _this3 = _possibleConstructorReturn(this, (ChatInput.__proto__ || Object.getPrototypeOf(ChatInput)).call(this, props));
 
-    _this2.onChange = function (e) {
+    _this3.onChange = function (e) {
       var value = e.target.value;
 
-      _this2.setState(function (prevState, props) {
+      _this3.setState(function (prevState, props) {
         return { input: value };
       });
     };
 
-    _this2.onClick = function () {};
+    _this3.buttonClick = function () {
+      socket.emit("sendChat", { username: _this3.props.username, message: _this3.state.input });
+    };
 
-    _this2.state = {
+    _this3.state = {
       input: ""
     };
-    return _this2;
+    return _this3;
   }
 
   _createClass(ChatInput, [{
@@ -91,33 +138,47 @@ var App = function (_React$PureComponent) {
   function App(props) {
     _classCallCheck(this, App);
 
-    var _this3 = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this, props));
+    var _this4 = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this, props));
 
-    _this3.state = {
+    _this4.askNick = function () {
+      prompt({
+        title: 'Insert Your Name',
+        label: 'Insert Your NickName In ChatApp Plz',
+        value: '',
+        inputAttrs: { // attrs to be set if using 'input'
+          type: 'text'
+        },
+        type: 'input' // 'select' or 'input, defaults to 'input'
+      }).then(function (r) {
+        if (!r) {
+          _this4.askNick();
+          return;
+        }
+        _this4.setState({
+          username: r
+        });
+        socket.emit("initUser", { username: _this4.state.username });
+        socket.on("overlap", function (data) {
+          _this4.askNick();
+        });
+      }).catch(console.error);
+    };
+
+    _this4.state = {
       username: ""
     };
-    return _this3;
+    return _this4;
   }
 
   _createClass(App, [{
     key: "componentDidMount",
     value: function componentDidMount() {
-      prompt({
-        title: 'Prompt example',
-        label: 'URL:',
-        value: 'http://example.org',
-        inputAttrs: { // attrs to be set if using 'input'
-          type: 'url'
-        },
-        type: 'select', // 'select' or 'input, defaults to 'input'
-        selectOptions: { // select options if using 'select' type
-          'value 1': 'Display Option 1',
-          'value 2': 'Display Option 2',
-          'value 3': 'Display Option 3'
-        }
-      }).then(function (r) {
-        console.log('result', r); // null if window was closed, or user clicked Cancel
-      }).catch(console.error);
+      this.askNick();
+      socket.on("newUser", function (data) {
+        notifier.notify('WelCome New User!', {
+          message: "WelCome! " + data.username + "!"
+        });
+      });
     }
   }, {
     key: "render",
@@ -126,8 +187,8 @@ var App = function (_React$PureComponent) {
         "div",
         null,
         React.createElement(Title, null),
-        React.createElement("div", { style: { width: "100%", height: "500px" } }),
-        React.createElement(ChatInput, null)
+        React.createElement(ChatBox, null),
+        React.createElement(ChatInput, { username: this.state.username })
       );
     }
   }]);
