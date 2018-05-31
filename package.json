@@ -2,7 +2,7 @@
   "name": "electron-chat",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
     "ui": "babel lib/ui.js --out-file ui-compiled.js",
     "run": "electron main.js",
@@ -21,8 +21,7 @@
     "electron-prebuilt": "^1.4.13",
     "electron-prompt": "^0.5.0",
     "express": "^4.16.3",
-    "node-notifier": "^5.2.1",
-    "socket.io": "^2.1.1",
-    "socket.io-client": "^2.1.1"
+    "simple-vector": "^1.1.4",
+    "socket.io": "^2.1.1"
   }
 }
