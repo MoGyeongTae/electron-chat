@@ -8,21 +8,57 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var socket = io.connect("http://electronchat.gyeongtae.com");
+var socket = io.connect("http://localhost:3000");
 // Title Component
-var Title = function Title() {
-  return React.createElement(
-    "div",
-    { style: { width: "100%", height: "50px", backgroundColor: "#FF9800", display: "flex", justifyContent: 'center', alignItems: "center" } },
-    React.createElement(
-      "h2",
-      { style: { color: "white" } },
-      "Electron Chat App Title"
-    )
-  );
-};
+
+var Title = function (_React$Component) {
+  _inherits(Title, _React$Component);
+
+  function Title(props) {
+    _classCallCheck(this, Title);
+
+    var _this = _possibleConstructorReturn(this, (Title.__proto__ || Object.getPrototypeOf(Title)).call(this, props));
+
+    _this.state = {
+      conusers: ""
+    };
+    return _this;
+  }
+
+  _createClass(Title, [{
+    key: "componentDidMount",
+    value: function componentDidMount() {
+      var _this2 = this;
+
+      socket.on("conusers", function (data) {
+        _this2.setState({
+          conusers: data.usercount
+        });
+      });
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      return React.createElement(
+        "div",
+        { style: { width: "100%", height: "50px", backgroundColor: "#FF9800", display: "flex", justifyContent: "center", alignItems: "center" } },
+        React.createElement(
+          "h2",
+          { style: { color: "white" } },
+          "Chat App Title - Current Users (",
+          this.state.conusers,
+          ")"
+        )
+      );
+    }
+  }]);
+
+  return Title;
+}(React.Component);
 
 // Chatting Style For Your Own Chat
+
+
 var myStyle = {
   padding: "5px",
   float: "right",
@@ -72,43 +108,43 @@ var myStyle = {
 
 // ChatBox Component
 
-var ChatBox = function (_React$Component) {
-  _inherits(ChatBox, _React$Component);
+var ChatBox = function (_React$Component2) {
+  _inherits(ChatBox, _React$Component2);
 
   function ChatBox(props) {
     _classCallCheck(this, ChatBox);
 
-    var _this = _possibleConstructorReturn(this, (ChatBox.__proto__ || Object.getPrototypeOf(ChatBox)).call(this, props));
+    var _this3 = _possibleConstructorReturn(this, (ChatBox.__proto__ || Object.getPrototypeOf(ChatBox)).call(this, props));
 
-    _this.state = {
+    _this3.state = {
       chatLog: []
     };
-    _this.myChatBox = React.createRef();
-    _this.whoChat = React.createRef();
-    return _this;
+    _this3.myChatBox = React.createRef();
+    _this3.whoChat = React.createRef();
+    return _this3;
   }
 
   _createClass(ChatBox, [{
     key: "componentDidMount",
     value: function componentDidMount() {
-      var _this2 = this;
+      var _this4 = this;
 
       socket.on("receiveChat", function (data) {
-        var newStateArray = _this2.state.chatLog.slice();
-        var ismy = _this2.props.username == data.username;
+        var newStateArray = _this4.state.chatLog.slice();
+        var ismy = _this4.props.username == data.username;
         newStateArray.push({ username: data.username, message: data.message, my: ismy });
-        _this2.setState({
+        _this4.setState({
           chatLog: newStateArray
         });
-        _this2.myChatBox.current.scrollTop = _this2.myChatBox.current.scrollHeight;
+        _this4.myChatBox.current.scrollTop = _this4.myChatBox.current.scrollHeight;
       });
 
       socket.on("chatStart", function (data) {
-        _this2.whoChat.current.style.display = "flex";
+        _this4.whoChat.current.style.display = "flex";
       });
 
       socket.on("chatEnd", function (data) {
-        _this2.whoChat.current.style.display = "none";
+        _this4.whoChat.current.style.display = "none";
       });
     }
   }, {
@@ -143,50 +179,50 @@ var ChatBox = function (_React$Component) {
 // ChatInput Component
 
 
-var ChatInput = function (_React$Component2) {
-  _inherits(ChatInput, _React$Component2);
+var ChatInput = function (_React$Component3) {
+  _inherits(ChatInput, _React$Component3);
 
   function ChatInput(props) {
     _classCallCheck(this, ChatInput);
 
-    var _this3 = _possibleConstructorReturn(this, (ChatInput.__proto__ || Object.getPrototypeOf(ChatInput)).call(this, props));
+    var _this5 = _possibleConstructorReturn(this, (ChatInput.__proto__ || Object.getPrototypeOf(ChatInput)).call(this, props));
 
-    _this3.onChange = function (e) {
+    _this5.onChange = function (e) {
       var value = e.target.value;
 
-      _this3.setState(function (prevState, props) {
+      _this5.setState(function (prevState, props) {
         return { input: value };
       });
     };
 
-    _this3.buttonClick = function () {
-      socket.emit("sendChat", { username: _this3.props.username, message: _this3.state.input });
-      _this3.setState(function (prevState, props) {
+    _this5.buttonClick = function () {
+      socket.emit("sendChat", { username: _this5.props.username, message: _this5.state.input });
+      _this5.setState(function (prevState, props) {
         return { input: "" };
       });
     };
 
-    _this3.onFocus = function () {
+    _this5.onFocus = function () {
       socket.emit("startChat");
     };
 
-    _this3.onBlur = function () {
+    _this5.onBlur = function () {
       socket.emit("endChat");
     };
 
-    _this3.onKeyPress = function (e) {
+    _this5.onKeyPress = function (e) {
       if (e.key == "Enter") {
-        _this3.buttonClick();
+        _this5.buttonClick();
       } else {
         return;
       }
     };
 
-    _this3.state = {
+    _this5.state = {
       input: "",
       usercon: false
     };
-    return _this3;
+    return _this5;
   }
 
   _createClass(ChatInput, [{
@@ -198,7 +234,7 @@ var ChatInput = function (_React$Component2) {
         React.createElement("input", { type: "text", value: this.state.input, onChange: this.onChange, onFocus: this.onFocus, onBlur: this.onBlur, onKeyPress: this.onKeyPress }),
         React.createElement(
           "button",
-          { onClick: this.buttonClick },
+          { onClick: this.buttonClick, style: { border: "none", backgroundColor: "#FF9800", width: "50px", height: "50px", borderRadius: "3px", marginLeft: "15px" } },
           "Send"
         )
       );
@@ -211,16 +247,16 @@ var ChatInput = function (_React$Component2) {
 // Main Ui Component
 
 
-var App = function (_React$Component3) {
-  _inherits(App, _React$Component3);
+var App = function (_React$Component4) {
+  _inherits(App, _React$Component4);
 
   function App(props) {
     _classCallCheck(this, App);
 
-    var _this4 = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this, props));
+    var _this6 = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this, props));
 
-    _this4.askNick = function () {
-      if (_this4.state.username) {
+    _this6.askNick = function () {
+      if (_this6.state.username) {
         return;
       }
       prompt({
@@ -233,24 +269,24 @@ var App = function (_React$Component3) {
         type: 'input' // 'select' or 'input, defaults to 'input'
       }).then(function (r) {
         if (!r) {
-          _this4.askNick();
+          _this6.askNick();
           return;
         }
-        _this4.setState({
+        _this6.setState({
           username: r
         });
 
-        socket.emit("initUser", { username: _this4.state.username });
+        socket.emit("initUser", { username: _this6.state.username });
         socket.on("overlap", function (data) {
-          _this4.askNick();
+          _this6.askNick();
         });
       }).catch(console.error);
     };
 
-    _this4.state = {
+    _this6.state = {
       username: ""
     };
-    return _this4;
+    return _this6;
   }
 
   _createClass(App, [{
