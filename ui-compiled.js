@@ -8,7 +8,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var socket = io.connect("http://localhost:3000");
+var socket = io.connect("http://electronchat.gyeongtae.com");
 // Title Component
 var Title = function Title() {
   return React.createElement(
@@ -161,6 +161,9 @@ var ChatInput = function (_React$Component2) {
 
     _this3.buttonClick = function () {
       socket.emit("sendChat", { username: _this3.props.username, message: _this3.state.input });
+      _this3.setState(function (prevState, props) {
+        return { input: "" };
+      });
     };
 
     _this3.onFocus = function () {
@@ -169,6 +172,14 @@ var ChatInput = function (_React$Component2) {
 
     _this3.onBlur = function () {
       socket.emit("endChat");
+    };
+
+    _this3.onKeyPress = function (e) {
+      if (e.key == "Enter") {
+        _this3.buttonClick();
+      } else {
+        return;
+      }
     };
 
     _this3.state = {
@@ -184,7 +195,7 @@ var ChatInput = function (_React$Component2) {
       return React.createElement(
         "div",
         { style: { width: "100%", height: "50px", display: "flex", justifyContent: "center", alignItems: "center" } },
-        React.createElement("input", { type: "text", onChange: this.onChange, onFocus: this.onFocus, onBlur: this.onBlur }),
+        React.createElement("input", { type: "text", value: this.state.input, onChange: this.onChange, onFocus: this.onFocus, onBlur: this.onBlur, onKeyPress: this.onKeyPress }),
         React.createElement(
           "button",
           { onClick: this.buttonClick },
@@ -209,6 +220,9 @@ var App = function (_React$Component3) {
     var _this4 = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this, props));
 
     _this4.askNick = function () {
+      if (_this4.state.username) {
+        return;
+      }
       prompt({
         title: 'Insert Your Name',
         label: 'Insert Your NickName In ChatApp Plz',
