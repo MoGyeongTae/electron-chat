@@ -8,7 +8,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var socket = io.connect("http://localhost:3000");
+var socket = io.connect("http://electronchat.gyeongtae.com");
 // Title Component
 
 var Title = function (_React$Component) {
@@ -19,8 +19,19 @@ var Title = function (_React$Component) {
 
     var _this = _possibleConstructorReturn(this, (Title.__proto__ || Object.getPrototypeOf(Title)).call(this, props));
 
+    _this.selectChange = function (e) {
+      var value = e.target.value;
+
+      _this.setState({ nextchannel: value });
+    };
+
+    _this.changeChannel = function () {
+      socket.emit("sendChannel", { currentChannel: _this.props.channel, nextChannel: _this.state.nextchannel });
+    };
+
     _this.state = {
-      conusers: ""
+      conusers: "",
+      nextchannel: "1"
     };
     return _this;
   }
@@ -41,13 +52,34 @@ var Title = function (_React$Component) {
     value: function render() {
       return React.createElement(
         "div",
-        { style: { width: "100%", height: "50px", backgroundColor: "#FF9800", display: "flex", justifyContent: "center", alignItems: "center" } },
+        { className: "title" },
         React.createElement(
           "h2",
           { style: { color: "white" } },
-          "Chat App Title - Current Users (",
+          "\uD604\uC7AC \uCC44\uB110 (",
+          this.props.channel,
+          "\uCC44\uB110) - \uC811\uC18D\uC911\uC778 \uC720\uC800 (",
           this.state.conusers,
           ")"
+        ),
+        React.createElement(
+          "select",
+          { className: "selectChannel", onChange: this.selectChange },
+          React.createElement(
+            "option",
+            { value: "1" },
+            "1\uCC44\uB110"
+          ),
+          React.createElement(
+            "option",
+            { value: "2" },
+            "2\uCC44\uB110"
+          )
+        ),
+        React.createElement(
+          "button",
+          { onClick: this.changeChannel, className: "btnChange" },
+          "Change Channel"
         )
       );
     }
@@ -56,49 +88,23 @@ var Title = function (_React$Component) {
   return Title;
 }(React.Component);
 
-// Chatting Style For Your Own Chat
+// Chat Log Component
 
 
-var myStyle = {
-  padding: "5px",
-  float: "right",
-  clear: "both",
-  backgroundColor: "#FFB74D",
-  borderRadius: "3px",
-  height: "30px",
-  marginBottom: "10px",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center"
-
-  // Chatting Style For Others
-};var otherStyle = {
-  padding: "5px",
-  float: "left",
-  clear: "both",
-  backgroundColor: "#4CAF50",
-  borderRadius: "3px",
-  height: "30px",
-  marginBottom: "10px",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center"
-
-  // Chat Log Component
-};var Chat = function Chat(props) {
+var Chat = function Chat(props) {
   return React.createElement(
     "div",
     null,
     props.my && React.createElement(
       "div",
-      { style: myStyle },
+      { className: "myChat" },
       props.username,
       " : ",
       props.message
     ),
     !props.my && React.createElement(
       "div",
-      { style: otherStyle },
+      { className: "otherChat" },
       props.username,
       " : ",
       props.message
@@ -162,11 +168,11 @@ var ChatBox = function (_React$Component2) {
       });
       return React.createElement(
         "div",
-        { style: { width: "100%", height: "500px", overflowY: "scroll", marginTop: "10px", position: "relative" }, ref: this.myChatBox },
+        { className: "chatBox", ref: this.myChatBox },
         chat,
         React.createElement(
           "div",
-          { ref: this.whoChat, style: { display: "none", width: "50%", height: "30px", position: "fixed", backgroundColor: "#F44336", top: "470px", left: "25%", color: "white", justifyContent: "center", alignItems: "center", borderRadius: "5px" } },
+          { ref: this.whoChat, className: "whoChat" },
           "\uB204\uAD70\uAC00 \uD560 \uB9D0\uC744 \uC785\uB825\uC911\uC785\uB2C8\uB2E4"
         )
       );
@@ -196,18 +202,18 @@ var ChatInput = function (_React$Component3) {
     };
 
     _this5.buttonClick = function () {
-      socket.emit("sendChat", { username: _this5.props.username, message: _this5.state.input });
+      socket.emit("sendChat", { username: _this5.props.username, message: _this5.state.input, channel: _this5.props.channel });
       _this5.setState(function (prevState, props) {
         return { input: "" };
       });
     };
 
     _this5.onFocus = function () {
-      socket.emit("startChat");
+      socket.emit("startChat", { channel: _this5.props.channel });
     };
 
     _this5.onBlur = function () {
-      socket.emit("endChat");
+      socket.emit("endChat", { channel: _this5.props.channel });
     };
 
     _this5.onKeyPress = function (e) {
@@ -219,8 +225,7 @@ var ChatInput = function (_React$Component3) {
     };
 
     _this5.state = {
-      input: "",
-      usercon: false
+      input: ""
     };
     return _this5;
   }
@@ -230,11 +235,11 @@ var ChatInput = function (_React$Component3) {
     value: function render() {
       return React.createElement(
         "div",
-        { style: { width: "100%", height: "50px", display: "flex", justifyContent: "center", alignItems: "center" } },
-        React.createElement("input", { type: "text", value: this.state.input, onChange: this.onChange, onFocus: this.onFocus, onBlur: this.onBlur, onKeyPress: this.onKeyPress }),
+        { className: "inputBox" },
+        React.createElement("input", { type: "text", style: { width: "90%", height: "30px", float: "left" }, value: this.state.input, onChange: this.onChange, onFocus: this.onFocus, onBlur: this.onBlur, onKeyPress: this.onKeyPress }),
         React.createElement(
           "button",
-          { onClick: this.buttonClick, style: { border: "none", backgroundColor: "#FF9800", width: "50px", height: "50px", borderRadius: "3px", marginLeft: "15px" } },
+          { onClick: this.buttonClick, className: "btnSend" },
           "Send"
         )
       );
@@ -284,7 +289,8 @@ var App = function (_React$Component4) {
     };
 
     _this6.state = {
-      username: ""
+      username: "",
+      channel: "1"
     };
     return _this6;
   }
@@ -292,10 +298,17 @@ var App = function (_React$Component4) {
   _createClass(App, [{
     key: "componentDidMount",
     value: function componentDidMount() {
+      var _this7 = this;
+
       this.askNick();
       socket.on("newUser", function (data) {
         notifier.notify('WelCome New User!', {
           message: "WelCome! " + data.username + "!"
+        });
+      });
+      socket.on("changeChannel", function (data) {
+        _this7.setState({
+          channel: data.channel
         });
       });
     }
@@ -305,9 +318,9 @@ var App = function (_React$Component4) {
       return React.createElement(
         "div",
         null,
-        React.createElement(Title, null),
+        React.createElement(Title, { channel: this.state.channel }),
         React.createElement(ChatBox, { username: this.state.username }),
-        React.createElement(ChatInput, { username: this.state.username })
+        React.createElement(ChatInput, { username: this.state.username, channel: this.state.channel })
       );
     }
   }]);
