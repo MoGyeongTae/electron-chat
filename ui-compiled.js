@@ -10,7 +10,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var socket = io.connect("http://localhost:3000");
+var socket = io.connect("http://electronchat.gyeongtae.com");
+
 // Title Component
 
 var Title = function (_React$Component) {
@@ -161,6 +162,7 @@ var ImageChat = function ImageChat(props) {
 };
 
 // ChatBox Component
+// props - channel, username
 
 var ChatBox = function (_React$Component2) {
   _inherits(ChatBox, _React$Component2);
@@ -354,13 +356,13 @@ var ChatInput = function (_React$Component3) {
         ),
         React.createElement(
           "div",
-          null,
-          React.createElement("input", { type: "file", onChange: this.fileChange }),
+          { className: "filebox" },
           React.createElement(
-            "button",
-            { className: "btnSend", onClick: this.fileSend },
-            "Upload"
-          )
+            "label",
+            { "for": "fileupload" },
+            "\uC774\uBBF8\uC9C0 \uC5C5\uB85C\uB4DC"
+          ),
+          React.createElement("input", { type: "file", id: "fileupload", onChange: this.fileChange })
         )
       );
     }
