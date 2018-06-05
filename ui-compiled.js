@@ -2,13 +2,15 @@
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var socket = io.connect("http://electronchat.gyeongtae.com");
+var socket = io.connect("http://localhost:3000");
 // Title Component
 
 var Title = function (_React$Component) {
@@ -95,19 +97,65 @@ var Chat = function Chat(props) {
   return React.createElement(
     "div",
     null,
-    props.my && React.createElement(
+    props.my != null && props.my && React.createElement(
       "div",
       { className: "myChat" },
       props.username,
       " : ",
       props.message
     ),
-    !props.my && React.createElement(
+    props.my != null && !props.my && React.createElement(
       "div",
       { className: "otherChat" },
       props.username,
       " : ",
       props.message
+    ),
+    props.system && React.createElement(
+      "div",
+      { className: "systemChat" },
+      props.username,
+      " : ",
+      props.message
+    )
+  );
+};
+
+var ImageChat = function ImageChat(props) {
+  return React.createElement(
+    "div",
+    null,
+    props.my && React.createElement(
+      "div",
+      { className: "myImageChat" },
+      React.createElement(
+        "p",
+        null,
+        "- ",
+        props.username,
+        " -"
+      ),
+      React.createElement(
+        "p",
+        null,
+        React.createElement("img", { src: props.url, width: "400", height: "auto" })
+      )
+    ),
+    !props.my && React.createElement(
+      "div",
+      { className: "otherImageChat" },
+      React.createElement(
+        "p",
+        null,
+        "- ",
+        props.username,
+        " -"
+      ),
+      React.createElement(
+        "p",
+        null,
+        React.createElement("img", { src: props.url, width: "400", height: "auto" })
+      )
     )
   );
 };
@@ -136,11 +184,11 @@ var ChatBox = function (_React$Component2) {
       var _this4 = this;
 
       socket.on("receiveChat", function (data) {
-        var newStateArray = _this4.state.chatLog.slice();
         var ismy = _this4.props.username == data.username;
-        newStateArray.push({ username: data.username, message: data.message, my: ismy });
-        _this4.setState({
-          chatLog: newStateArray
+        _this4.setState(function (prevState) {
+          return {
+            chatLog: [].concat(_toConsumableArray(prevState.chatLog), [{ username: data.username, message: data.message, my: ismy, system: false }])
+          };
         });
         _this4.myChatBox.current.scrollTop = _this4.myChatBox.current.scrollHeight;
       });
@@ -152,6 +200,34 @@ var ChatBox = function (_React$Component2) {
       socket.on("chatEnd", function (data) {
         _this4.whoChat.current.style.display = "none";
       });
+
+      socket.on("system:join", function (data) {
+        _this4.setState(function (prevState) {
+          return {
+            chatLog: [].concat(_toConsumableArray(prevState.chatLog), [{ username: "System", message: data.message, my: null, system: true }])
+          };
+        });
+        _this4.myChatBox.current.scrollTop = _this4.myChatBox.current.scrollHeight;
+      });
+
+      socket.on("system:leave", function (data) {
+        _this4.setState(function (prevState) {
+          return {
+            chatLog: [].concat(_toConsumableArray(prevState.chatLog), [{ username: "System", message: data.message, my: null, system: true }])
+          };
+        });
+        _this4.myChatBox.current.scrollTop = _this4.myChatBox.current.scrollHeight;
+      });
+
+      socket.on("receiveImage", function (data) {
+        var ismy = _this4.props.username == data.username;
+        _this4.setState(function (prevState) {
+          return {
+            chatLog: [].concat(_toConsumableArray(prevState.chatLog), [{ username: data.username, message: null, url: data.url, my: ismy }])
+          };
+        });
+        _this4.myChatBox.current.scrollTop = _this4.myChatBox.current.scrollHeight;
+      });
     }
   }, {
     key: "render",
@@ -159,10 +235,16 @@ var ChatBox = function (_React$Component2) {
       var chatLog = this.state.chatLog;
 
       var chat = chatLog.map(function (item, idx) {
-        return React.createElement(Chat, {
+        if (item.message != null) return React.createElement(Chat, {
           username: item.username,
           message: item.message,
           my: item.my,
+          system: item.system,
+          key: idx
+        });else return React.createElement(ImageChat, {
+          username: item.username,
+          my: item.my,
+          url: item.url,
           key: idx
         });
       });
@@ -224,6 +306,30 @@ var ChatInput = function (_React$Component3) {
       }
     };
 
+    _this5.fileChange = function (e) {
+      e.persist();
+      var exArray = ["jpg", "png", "jpeg", "gif"];
+      var file = e.target.files;
+      var type = file[0].type.split("/")[1];
+      if (exArray.indexOf(type) < 0) {
+        e.target.value = "";
+        notifier.notify('이미지 파일만 가능합니다!', {
+          message: "\uB2F9\uC2E0\uC774 \uC62C\uB9B0 \uD30C\uC77C\uC758 \uD615\uC2DD\uC740 \uD604\uC7AC \uBD88\uAC00\uB2A5\uD569\uB2C8\uB2E4"
+        });
+        return;
+      }
+      var reader = new FileReader();
+      reader.onload = function () {
+        _this5.fileSend(reader.result);
+        e.target.value = "";
+      };
+      reader.readAsDataURL(file[0]);
+    };
+
+    _this5.fileSend = function (result) {
+      socket.emit("sendImage", { username: _this5.props.username, url: result, channel: _this5.props.channel });
+    };
+
     _this5.state = {
       input: ""
     };
@@ -235,12 +341,26 @@ var ChatInput = function (_React$Component3) {
     value: function render() {
       return React.createElement(
         "div",
-        { className: "inputBox" },
-        React.createElement("input", { type: "text", style: { width: "90%", height: "30px", float: "left" }, value: this.state.input, onChange: this.onChange, onFocus: this.onFocus, onBlur: this.onBlur, onKeyPress: this.onKeyPress }),
+        null,
         React.createElement(
-          "button",
-          { onClick: this.buttonClick, className: "btnSend" },
-          "Send"
+          "div",
+          { className: "inputBox" },
+          React.createElement("input", { type: "text", style: { width: "90%", height: "30px", float: "left" }, value: this.state.input, onChange: this.onChange, onFocus: this.onFocus, onBlur: this.onBlur, onKeyPress: this.onKeyPress }),
+          React.createElement(
+            "button",
+            { onClick: this.buttonClick, className: "btnSend" },
+            "Send"
+          )
+        ),
+        React.createElement(
+          "div",
+          null,
+          React.createElement("input", { type: "file", onChange: this.fileChange }),
+          React.createElement(
+            "button",
+            { className: "btnSend", onClick: this.fileSend },
+            "Upload"
+          )
         )
       );
     }
@@ -280,11 +400,15 @@ var App = function (_React$Component4) {
         _this6.setState({
           username: r
         });
-
-        socket.emit("initUser", { username: _this6.state.username });
+        socket.emit("initUser", { username: r });
         socket.on("overlap", function (data) {
+          _this6.setState({
+            username: ""
+          });
           _this6.askNick();
+          return;
         });
+        return;
       }).catch(console.error);
     };
 

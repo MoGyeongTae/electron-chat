@@ -15,7 +15,6 @@
   margin-left : 3%;
 }
 
-
 .btnChange {
   border : none;
   background-color : #FB8C00;
@@ -70,12 +69,50 @@
   height : 30px;
   position : fixed;
   background-color : #F44336;
-  top : 470px;
+  top : 550px;
   left : 25%;
   color:white;
   justify-content : center;
   align-items : center;
   border-radius : 5px;
+}
+
+.systemChat {
+  padding : 5px;
+  float: left;
+  width : 90%;
+  margin-left:5%;
+  clear : both;
+  background-color : #616161;
+  border-radius : 3px;
+  height: 20px;
+  color:white;
+  margin-bottom : 10px;
+  display : flex;
+  align-items : center;
+  justify-content : center;
+}
+
+.myImageChat {
+  padding : 5px;
+  float:right;
+  clear : both;
+  background-color : #FFB74D;
+  border-radius : 3px;
+  margin-bottom : 10px;
+  display : flex;
+  flex-direction : column;
+}
+
+.otherImageChat {
+  padding : 10px;
+  float: left;
+  clear : both;
+  background-color : #4CAF50;
+  border-radius : 3px;
+  margin-bottom : 10px;
+  display : flex;
+  flex-direction : column;
 }
 
 .inputBox {

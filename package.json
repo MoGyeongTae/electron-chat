@@ -21,6 +21,7 @@
     "electron-prebuilt": "^1.4.13",
     "electron-prompt": "^0.5.0",
     "express": "^4.16.3",
+    "react-file-reader": "^1.1.4",
     "simple-vector": "^1.1.4",
     "socket.io": "^2.1.1"
   }
