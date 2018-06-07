@@ -10,7 +10,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var socket = io.connect("http://electronchat.gyeongtae.com");
+var socket = io.connect("http://localhost:3000");
+var currentWindow = remote.getCurrentWindow();
 
 // Title Component
 
@@ -29,6 +30,12 @@ var Title = function (_React$Component) {
     };
 
     _this.changeChannel = function () {
+      if (_this.props.channel == _this.state.nextchannel) {
+        notifier.notify('이미 그 채널입니다', {
+          message: "\uB2F9\uC2E0\uC740 \uC774\uBBF8 \uB2F9\uC2E0\uC774 \uAC00\uACE0\uC2F6\uC5B4\uD558\uB294 \uCC44\uB110\uC5D0 \uC788\uC2B5\uB2C8\uB2E4!"
+        });
+        return;
+      }
       socket.emit("sendChannel", { currentChannel: _this.props.channel, nextChannel: _this.state.nextchannel });
     };
 
@@ -40,17 +47,6 @@ var Title = function (_React$Component) {
   }
 
   _createClass(Title, [{
-    key: "componentDidMount",
-    value: function componentDidMount() {
-      var _this2 = this;
-
-      socket.on("conusers", function (data) {
-        _this2.setState({
-          conusers: data.usercount
-        });
-      });
-    }
-  }, {
     key: "render",
     value: function render() {
       return React.createElement(
@@ -61,9 +57,7 @@ var Title = function (_React$Component) {
           { style: { color: "white" } },
           "\uD604\uC7AC \uCC44\uB110 (",
           this.props.channel,
-          "\uCC44\uB110) - \uC811\uC18D\uC911\uC778 \uC720\uC800 (",
-          this.state.conusers,
-          ")"
+          "\uCC44\uB110)"
         ),
         React.createElement(
           "select",
@@ -89,6 +83,71 @@ var Title = function (_React$Component) {
   }]);
 
   return Title;
+}(React.Component);
+
+var StatusBar = function (_React$Component2) {
+  _inherits(StatusBar, _React$Component2);
+
+  function StatusBar(props) {
+    _classCallCheck(this, StatusBar);
+
+    var _this2 = _possibleConstructorReturn(this, (StatusBar.__proto__ || Object.getPrototypeOf(StatusBar)).call(this, props));
+
+    _this2.state = {
+      conusers: 0,
+      conusersList: []
+    };
+    return _this2;
+  }
+
+  _createClass(StatusBar, [{
+    key: "componentDidMount",
+    value: function componentDidMount() {
+      var _this3 = this;
+
+      socket.on("conusers", function (data) {
+        _this3.setState({
+          conusers: data.usercount,
+          conusersList: data.userlist
+        });
+      });
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      var conusersList = this.state.conusersList;
+
+      var userlist = conusersList.map(function (item, idx) {
+        return React.createElement(
+          "div",
+          { className: "userlistItem" },
+          item.username,
+          React.createElement("div", { className: "online" })
+        );
+      });
+      return React.createElement(
+        "div",
+        { className: "statusBar" },
+        React.createElement(
+          "div",
+          { className: "currentUsers" },
+          React.createElement(
+            "p",
+            null,
+            "\uD604\uC7AC \uC720\uC800 \uC218 : ",
+            this.state.conusers
+          )
+        ),
+        React.createElement(
+          "div",
+          { className: "currentUsersList" },
+          userlist
+        )
+      );
+    }
+  }]);
+
+  return StatusBar;
 }(React.Component);
 
 // Chat Log Component
@@ -164,71 +223,86 @@ var ImageChat = function ImageChat(props) {
 // ChatBox Component
 // props - channel, username
 
-var ChatBox = function (_React$Component2) {
-  _inherits(ChatBox, _React$Component2);
+var ChatBox = function (_React$Component3) {
+  _inherits(ChatBox, _React$Component3);
 
   function ChatBox(props) {
     _classCallCheck(this, ChatBox);
 
-    var _this3 = _possibleConstructorReturn(this, (ChatBox.__proto__ || Object.getPrototypeOf(ChatBox)).call(this, props));
+    var _this4 = _possibleConstructorReturn(this, (ChatBox.__proto__ || Object.getPrototypeOf(ChatBox)).call(this, props));
 
-    _this3.state = {
-      chatLog: []
+    _this4.state = {
+      chatLog: [],
+      currentScroll: 0
     };
-    _this3.myChatBox = React.createRef();
-    _this3.whoChat = React.createRef();
-    return _this3;
+    _this4.myChatBox = React.createRef();
+    _this4.whoChat = React.createRef();
+    return _this4;
   }
 
   _createClass(ChatBox, [{
     key: "componentDidMount",
     value: function componentDidMount() {
-      var _this4 = this;
+      var _this5 = this;
 
       socket.on("receiveChat", function (data) {
-        var ismy = _this4.props.username == data.username;
-        _this4.setState(function (prevState) {
+        var ismy = _this5.props.username == data.username;
+        _this5.setState(function (prevState) {
           return {
             chatLog: [].concat(_toConsumableArray(prevState.chatLog), [{ username: data.username, message: data.message, my: ismy, system: false }])
           };
         });
-        _this4.myChatBox.current.scrollTop = _this4.myChatBox.current.scrollHeight;
+        if (!currentWindow.isFocused()) {
+          var obj = _this5.state.chatLog[_this5.state.chatLog.length - 1];
+          notifier.notify('새 채팅이 왔습니다', {
+            message: obj.username + " : " + obj.message
+          });
+          return;
+        }
+        if (_this5.myChatBox.current.scrollTop < _this5.state.currentScroll) {
+          return;
+        } else {
+          _this5.myChatBox.current.scrollTop = _this5.myChatBox.current.scrollHeight - _this5.myChatBox.current.offsetHeight;
+        }
+        _this5.setState({
+          currentScroll: _this5.myChatBox.current.scrollHeight - _this5.myChatBox.current.offsetHeight
+        });
       });
 
       socket.on("chatStart", function (data) {
-        _this4.whoChat.current.style.display = "flex";
+        _this5.whoChat.current.style.display = "flex";
       });
 
       socket.on("chatEnd", function (data) {
-        _this4.whoChat.current.style.display = "none";
+        _this5.whoChat.current.style.display = "none";
       });
 
       socket.on("system:join", function (data) {
-        _this4.setState(function (prevState) {
+        _this5.setState(function (prevState) {
           return {
             chatLog: [].concat(_toConsumableArray(prevState.chatLog), [{ username: "System", message: data.message, my: null, system: true }])
           };
         });
-        _this4.myChatBox.current.scrollTop = _this4.myChatBox.current.scrollHeight;
+        _this5.myChatBox.current.scrollTop = _this5.myChatBox.current.scrollHeight;
       });
 
       socket.on("system:leave", function (data) {
-        _this4.setState(function (prevState) {
+        _this5.setState(function (prevState) {
           return {
             chatLog: [].concat(_toConsumableArray(prevState.chatLog), [{ username: "System", message: data.message, my: null, system: true }])
           };
         });
-        _this4.myChatBox.current.scrollTop = _this4.myChatBox.current.scrollHeight;
+        _this5.myChatBox.current.scrollTop = _this5.myChatBox.current.scrollHeight;
       });
 
       socket.on("receiveImage", function (data) {
-        var ismy = _this4.props.username == data.username;
-        _this4.setState(function (prevState) {
+        var ismy = _this5.props.username == data.username;
+        _this5.setState(function (prevState) {
           return {
             chatLog: [].concat(_toConsumableArray(prevState.chatLog), [{ username: data.username, message: null, url: data.url, my: ismy }])
           };
         });
-        _this4.myChatBox.current.scrollTop = _this4.myChatBox.current.scrollHeight;
+        _this5.myChatBox.current.scrollTop = _this5.myChatBox.current.scrollHeight;
       });
     }
   }, {
@@ -269,46 +343,46 @@ var ChatBox = function (_React$Component2) {
 // ChatInput Component
 
 
-var ChatInput = function (_React$Component3) {
-  _inherits(ChatInput, _React$Component3);
+var ChatInput = function (_React$Component4) {
+  _inherits(ChatInput, _React$Component4);
 
   function ChatInput(props) {
     _classCallCheck(this, ChatInput);
 
-    var _this5 = _possibleConstructorReturn(this, (ChatInput.__proto__ || Object.getPrototypeOf(ChatInput)).call(this, props));
+    var _this6 = _possibleConstructorReturn(this, (ChatInput.__proto__ || Object.getPrototypeOf(ChatInput)).call(this, props));
 
-    _this5.onChange = function (e) {
+    _this6.onChange = function (e) {
       var value = e.target.value;
 
-      _this5.setState(function (prevState, props) {
+      _this6.setState(function (prevState, props) {
         return { input: value };
       });
     };
 
-    _this5.buttonClick = function () {
-      socket.emit("sendChat", { username: _this5.props.username, message: _this5.state.input, channel: _this5.props.channel });
-      _this5.setState(function (prevState, props) {
+    _this6.buttonClick = function () {
+      socket.emit("sendChat", { username: _this6.props.username, message: _this6.state.input, channel: _this6.props.channel });
+      _this6.setState(function (prevState, props) {
         return { input: "" };
       });
     };
 
-    _this5.onFocus = function () {
-      socket.emit("startChat", { channel: _this5.props.channel });
+    _this6.onFocus = function () {
+      socket.emit("startChat", { channel: _this6.props.channel });
     };
 
-    _this5.onBlur = function () {
-      socket.emit("endChat", { channel: _this5.props.channel });
+    _this6.onBlur = function () {
+      socket.emit("endChat", { channel: _this6.props.channel });
     };
 
-    _this5.onKeyPress = function (e) {
+    _this6.onKeyPress = function (e) {
       if (e.key == "Enter") {
-        _this5.buttonClick();
+        _this6.buttonClick();
       } else {
         return;
       }
     };
 
-    _this5.fileChange = function (e) {
+    _this6.fileChange = function (e) {
       e.persist();
       var exArray = ["jpg", "png", "jpeg", "gif"];
       var file = e.target.files;
@@ -322,20 +396,20 @@ var ChatInput = function (_React$Component3) {
       }
       var reader = new FileReader();
       reader.onload = function () {
-        _this5.fileSend(reader.result);
+        _this6.fileSend(reader.result);
         e.target.value = "";
       };
       reader.readAsDataURL(file[0]);
     };
 
-    _this5.fileSend = function (result) {
-      socket.emit("sendImage", { username: _this5.props.username, url: result, channel: _this5.props.channel });
+    _this6.fileSend = function (result) {
+      socket.emit("sendImage", { username: _this6.props.username, url: result, channel: _this6.props.channel });
     };
 
-    _this5.state = {
+    _this6.state = {
       input: ""
     };
-    return _this5;
+    return _this6;
   }
 
   _createClass(ChatInput, [{
@@ -343,7 +417,7 @@ var ChatInput = function (_React$Component3) {
     value: function render() {
       return React.createElement(
         "div",
-        null,
+        { className: "functionBox" },
         React.createElement(
           "div",
           { className: "inputBox" },
@@ -374,16 +448,16 @@ var ChatInput = function (_React$Component3) {
 // Main Ui Component
 
 
-var App = function (_React$Component4) {
-  _inherits(App, _React$Component4);
+var App = function (_React$Component5) {
+  _inherits(App, _React$Component5);
 
   function App(props) {
     _classCallCheck(this, App);
 
-    var _this6 = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this, props));
+    var _this7 = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this, props));
 
-    _this6.askNick = function () {
-      if (_this6.state.username) {
+    _this7.askNick = function () {
+      if (_this7.state.username) {
         return;
       }
       prompt({
@@ -396,44 +470,58 @@ var App = function (_React$Component4) {
         type: 'input' // 'select' or 'input, defaults to 'input'
       }).then(function (r) {
         if (!r) {
-          _this6.askNick();
+          _this7.askNick();
           return;
         }
-        _this6.setState({
+        _this7.setState({
           username: r
         });
         socket.emit("initUser", { username: r });
         socket.on("overlap", function (data) {
-          _this6.setState({
+          _this7.setState({
             username: ""
           });
-          _this6.askNick();
+          _this7.askNick();
           return;
         });
         return;
       }).catch(console.error);
     };
 
-    _this6.state = {
+    _this7.state = {
       username: "",
       channel: "1"
     };
-    return _this6;
+    return _this7;
   }
 
   _createClass(App, [{
     key: "componentDidMount",
     value: function componentDidMount() {
-      var _this7 = this;
+      var _this8 = this;
 
-      this.askNick();
+      axios.get("http://download.gyeongtae.com/chatver?version=0.03").then(function (data) {
+        if (data.data.result == 0) {
+          var obj = {
+            title: '새로운 버전이 있습니다',
+            body: '채팅앱을 업데이트 하려면 클릭하세요'
+          };
+          var update = new window.Notification(obj.title, obj);
+          update.onclick = function () {
+            shell.openExternal("http://download.gyeongtae.com/chat");
+          };
+        }
+        _this8.askNick();
+      }).catch(function (err) {
+        console.log(err);
+      });
       socket.on("newUser", function (data) {
         notifier.notify('WelCome New User!', {
           message: "WelCome! " + data.username + "!"
         });
       });
       socket.on("changeChannel", function (data) {
-        _this7.setState({
+        _this8.setState({
           channel: data.channel
         });
       });
@@ -443,10 +531,19 @@ var App = function (_React$Component4) {
     value: function render() {
       return React.createElement(
         "div",
-        null,
-        React.createElement(Title, { channel: this.state.channel }),
-        React.createElement(ChatBox, { username: this.state.username }),
-        React.createElement(ChatInput, { username: this.state.username, channel: this.state.channel })
+        { className: "wrap" },
+        React.createElement(
+          "div",
+          { className: "leftBox" },
+          React.createElement(Title, { channel: this.state.channel }),
+          React.createElement(ChatBox, { username: this.state.username }),
+          React.createElement(ChatInput, { username: this.state.username, channel: this.state.channel })
+        ),
+        React.createElement(
+          "div",
+          { className: "rightBox" },
+          React.createElement(StatusBar, null)
+        )
       );
     }
   }]);

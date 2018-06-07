@@ -1,3 +1,24 @@
+.wrap {
+  width: 100%;
+  height : inherit;
+  position:relative;
+}
+
+.leftBox {
+  float:left;
+  width:80%;
+  height:inherit;
+  position:relative;
+}
+
+.rightBox {
+  float:right;
+  width:20%;
+  height:inherit;
+  position:relative;
+  border:1px solid #e0e0e0;
+}
+
 .title {
   width : 100%;
   height : 50px;
@@ -5,6 +26,51 @@
   display : flex;
   justify-content : center;
   align-items : center;
+  float:left;
+}
+
+.statusBar {
+  width:100%;
+  height:inherit;
+  float:left;
+}
+
+.currentUsers {
+  width: 100%;
+  height: 6.5%;
+  border-bottom : 1px solid #e0e0e0;
+  display:flex;
+  justify-content: center;
+  align-items: center;
+}
+.currentUsersList {
+  display:flex;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.userlistItem {
+  width:100%;
+  height:30px;
+  text-align:center;
+  line-height:30px;
+  cursor:pointer;
+  transition:all.3s;
+}
+
+.userlistItem:hover {
+  background-color:#d1d1d1;
+}
+
+.online {
+  width:10px;
+  height:10px;
+  border-radius:10px;
+  background-color:#3cd824;
+  float:right;
+  margin-top:5%;
 }
 
 .selectChannel {
@@ -23,6 +89,7 @@
   border-radius : 3px;
   cursor:pointer;
   transition : all.5s;
+  display:inline-block;
 }
 
 .btnChange:hover {
@@ -35,6 +102,7 @@
   overflow-y : scroll;
   margin-top : 10px;
   position:relative;
+  float:left;
 }
 
 .myChat {
@@ -115,9 +183,16 @@
   flex-direction : column;
 }
 
-.inputBox {
+.functionBox {
   width : 100%;
   height : 30px;
+  display : flex;
+  float:left;
+}
+
+.inputBox {
+  width : 100%;
+  height:30px;
   display : flex;
   justify-content : center;
   align-items : center;
