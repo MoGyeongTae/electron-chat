@@ -183,10 +183,36 @@
   flex-direction : column;
 }
 
+
+.myWhisperChat {
+  padding : 5px;
+  float:right;
+  clear : both;
+  background-color : #0D47A1;
+  border-radius : 3px;
+  height: 30px;
+  margin-bottom : 10px;
+  display : flex;
+  align-items : center;
+  justify-content : center;
+}
+
+.otherWhisperChat {
+  padding : 5px;
+  float: left;
+  clear : both;
+  background-color : #0D47A1;
+  border-radius : 3px;
+  height: 30px;
+  margin-bottom : 10px;
+  display : flex;
+  align-items : center;
+  justify-content : center;
+}
+
 .functionBox {
   width : 100%;
   height : 30px;
-  display : flex;
   float:left;
 }
 
@@ -196,6 +222,17 @@
   display : flex;
   justify-content : center;
   align-items : center;
+}
+.inputBox select {
+  width:10%;
+  height:30px;
+  float:left;
+}
+
+.inputBox input[type="text"] {
+  width : 80%;
+  height : 30px;
+  float : left;
 }
 
 .btnSend {

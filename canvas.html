@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <script>
+    window.onload = function() {
+      var canvas = document.getElementById("myCanvas");
+      var ctx = canvas.getContext("2d");
+
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight
+
+      window.addEventListener("resize", function() {
+        canvas.width = window.innerwidth;
+        canvas.height = window.innerheight
+      })
+
+      var rowCount = 16;
+      var colCount = 16;
+
+      for(var i = 0; i < rowCount; i++) {
+        for(var j = 0; j < colCount; j++) {
+          ctx.strokeStyle = "#bfbdbd"
+          ctx.rect( (window.innerWidth / colCount) * j, (window.innerHeight / rowCount) * i, window.innerWidth / colCount, window.innerHeight / rowCount  );
+          ctx.stroke();
+        }
+      }
+    }
+  </script>
+  <style>
+    * {
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+    }
+
+    #myCanvas {
+      background-color:#e0e0e0;
+    }
+  </style>
+</head>
+<body>
+  <div class="root">
+    <canvas id="myCanvas">캔버스 지원안함</canvas>
+  </div>
+</body>
+</html>
